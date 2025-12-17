@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>dotnet-FCG.Notification.Worker-c74bc55c-8b76-4c92-a701-704fe4f07c47</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Documentation\**" />
+    <Compile Remove="Kubernetes\**" />
+    <Content Remove="Documentation\**" />
+    <Content Remove="Kubernetes\**" />
+    <EmbeddedResource Remove="Documentation\**" />
+    <EmbeddedResource Remove="Kubernetes\**" />
+    <None Remove="Documentation\**" />
+    <None Remove="Kubernetes\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="README.md" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Communication.Email" Version="1.1.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+    <PackageReference Include="RabbitMQ.Client" Version="7.2.0" />
+  </ItemGroup>
+</Project>
