@@ -33,10 +33,10 @@ jobs:
              export RABBITMQ_USER="${{ secrets.RABBITMQ_USER }}"
              export RABBITMQ_PASSWORD="${{ secrets.RABBITMQ_PASSWORD }}"
              export ENV="${{ vars.ENV }}"
-             envsubst < Kubernetes/rabbitmq/secret.yaml | kubectl apply -n fcg-worker-dev -f -              # aplica o secret com substituição de variáveis
+             envsubst < Kubernetes/rabbitmq/secret.yaml | kubectl apply -n fcg-rabbitmq-dev -f -              # aplica o secret com substituição de variáveis
 
       - name: Deploy to AKS - DEV
         run: |
-             kubectl apply -f Kubernetes/rabbitmq/service.yaml -n fcg-worker-dev                            # aplica o service
-             envsubst < Kubernetes/rabbitmq/statefulset.yaml | kubectl apply -n fcg-worker-dev -f -         # aplica o statefulset com substituição de variáveis
-             kubectl rollout status statefulset/fcg-rabbitmq -n fcg-worker-dev                              # aguarda o rollout completar
+             kubectl apply -f Kubernetes/rabbitmq/service.yaml -n fcg-rabbitmq-dev                            # aplica o service
+             envsubst < Kubernetes/rabbitmq/statefulset.yaml | kubectl apply -n fcg-rabbitmq-dev -f -         # aplica o statefulset com substituição de variáveis
+             kubectl rollout status statefulset/fcg-rabbitmq -n fcg-rabbitmq-dev                              # aguarda o rollout completar
