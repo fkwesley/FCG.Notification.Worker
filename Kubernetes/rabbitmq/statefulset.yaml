@@ -1,0 +1,64 @@
+apiVersion: apps/v1                 # API usada para controllers de workload (Deployment, StatefulSet, etc.)
+kind: StatefulSet                   # Define que este workload é stateful (mantém estado/dados)
+metadata:
+  name: fcg-rabbitmq                # Nome base do StatefulSet, O pod será criado como: fcg-rabbitmq-0
+
+spec:
+  serviceName: fcg-rabbitmq-svc     # Service associado ao StatefulSet. É usado para dar identidade de rede estável ao pod
+  replicas: 1                       # Quantidade de instâncias do RabbitMQ.
+
+  selector:
+    matchLabels:
+      app: fcg-rabbitmq             # O StatefulSet só gerencia pods que tenham esse label
+
+  template:
+    metadata:
+      labels:
+        app: fcg-rabbitmq           # Esse label precisa bater com - selector do StatefulSet e o  selector do Service
+
+    spec:
+      terminationGracePeriodSeconds: 30
+      # Tempo que o Kubernetes espera antes de matar o pod à força.
+      # Dá tempo do RabbitMQ:
+      # - fechar conexões
+      # - salvar estado
+      # - evitar corrupção de dados
+
+      containers:
+        - name: fcg-rabbitmq-container          # Nome do container dentro do pod
+          image: rabbitmq:3-management          # Imagem oficial do RabbitMQ. Inclui a Management UI (porta 15672)
+          imagePullPolicy: IfNotPresent         # Só baixa a imagem se ela não existir no node
+          ports:
+            - name: amqp
+              containerPort: 5672               # Porta padrão do protocolo AMQP, usada por APIs e Workers para publicar/consumir mensagens
+
+            - name: management
+              containerPort: 15672              # Porta da interface web de administração do RabbitMQ
+
+          env:
+            - name: RABBITMQ_USER       # Variável de ambiente usada pelo RabbitMQ
+              valueFrom:
+                secretKeyRef:
+                  name: fcg-rabbitmq-secret
+                  key: RABBITMQ_USER
+
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: fcg-rabbitmq-secret
+                  key: RABBITMQ_PASSWORD
+
+          volumeMounts:
+            - name: rabbitmq-data
+              mountPath: /var/lib/rabbitmq      # Diretório onde o RabbitMQ grava filas, mensagens, metadados (Esse caminho PRECISA ser persistente)
+
+  volumeClaimTemplates:                         # Define um template de PVC que será criado automaticamente para cada pod do StatefulSet
+    - metadata:
+        name: rabbitmq-data                     # Nome base do volume
+        
+      spec:
+        accessModes:
+          - ReadWriteOnce                       # O volume pode ser montado por apenas um node por vez. É o modo correto para RabbitMQ
+        resources:
+          requests:
+            storage: 5Gi                        # Tamanho do disco persistente
