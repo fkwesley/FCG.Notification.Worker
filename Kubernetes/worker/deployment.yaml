@@ -27,9 +27,9 @@ spec:
           # ==========================
           envFrom:
             - configMapRef:
-                name: fcg-worker-config
+                name: fcg-notification-worker-config
             - secretRef:
-                name: fcg-worker-secret
+                name: fcg-notification-worker-secret
 
           # ==========================
           # Recursos (importante em AKS)
