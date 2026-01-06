@@ -1,0 +1,9 @@
+# Este arquivo cria múltiplos namespaces no cluster
+# Namespaces ajudam a organizar e isolar recursos no Kubernetes
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fcg-rabbitmq               # Namespace principal (produção)
+  labels:
+    environment: prd

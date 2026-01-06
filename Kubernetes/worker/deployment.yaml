@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fcg-notification-worker
+  labels:
+    app: fcg-notification-worker
+spec:
+  replicas: 1                         # Quantidade de workers (escala horizontal depois)
+  selector:
+    matchLabels:
+      app: fcg-notification-worker
+
+  template:
+    metadata:
+      labels:
+        app: fcg-notification-worker
+    spec:
+      restartPolicy: Always           # Worker sempre deve reiniciar se cair
+
+      containers:
+        - name: fcg-notification-worker-container
+          image: acrfcg.azurecr.io/fiapcloudgames/notification-worker/api:${IMAGE_TAG}     # Imagem do container no ACR
+          imagePullPolicy: Always
+
+          # ==========================
+          # Variáveis de ambiente
+          # ==========================
+          envFrom:
+            - configMapRef:
+                name: fcg-notification-worker-config
+            - secretRef:
+                name: fcg-notification-worker-secret
+
+          # ==========================
+          # Recursos (importante em AKS)
+          # ==========================
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "500m"
+              memory: "256Mi"

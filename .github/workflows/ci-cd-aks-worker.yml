@@ -1,0 +1,172 @@
+name: CI/CD - FCG.Notification.Worker - AKS
+
+on:
+  push:
+    branches:
+      - '**'
+    paths-ignore:
+      - '**/README.md'
+      - 'Documentation/**'
+
+jobs:
+  build-test-pushDockerImage:
+    runs-on: ubuntu-latest
+    outputs:
+      image_tag: ${{ steps.set_tag.outputs.image_tag }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+          
+      - name: Setup .NET 8.0
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore FCG.Notification.Worker.sln
+
+      - name: Build
+        run: dotnet build FCG.Notification.Worker.sln --configuration Release --no-restore
+        
+      - name: Login to Azure Container Registry
+        run: echo ${{ secrets.AZURE_ACR_PASSWORD }} | docker login acrfcg.azurecr.io -u ${{ secrets.AZURE_ACR_USERNAME }} --password-stdin
+
+      - name: Set Docker Image Tag
+        id: set_tag
+        run: |
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          echo "image_tag=${SHORT_SHA}" >> $GITHUB_OUTPUT
+
+      - name: Build Docker image
+        run: |
+          docker build -t acrfcg.azurecr.io/fiapcloudgames/notification-worker/api:latest \
+                       -t acrfcg.azurecr.io/fiapcloudgames/notification-worker/api:${{ steps.set_tag.outputs.image_tag }} .
+
+      - name: Push Docker image to ACR
+        run: |
+          docker push acrfcg.azurecr.io/fiapcloudgames/notification-worker/api:latest
+          docker push acrfcg.azurecr.io/fiapcloudgames/notification-worker/api:${{ steps.set_tag.outputs.image_tag }}
+          
+  deploy-dev:
+    needs: build-test-pushDockerImage
+    runs-on: ubuntu-latest
+    environment: DEV
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set AKS context
+        run: az aks get-credentials --resource-group RG_FCG --name aks-fcg-notification --overwrite-existing
+        
+      - name: Apply Namespaces
+        run: kubectl apply -f Kubernetes/worker/namespace.yaml
+
+      - name: Apply ConfigMap and Secret
+        run: |
+             export ASPNETCORE_ENVIRONMENT="${{ vars.ENV }}"
+             export EmailSettings__SenderEmail="${{ vars.SENDER_EMAIL }}"
+             export RabbitMQ__HostName="${{ vars.RABBITMQ_HOSTNAME }}"
+             export RabbitMQ__QueueName="${{ vars.RABBITMQ_QUEUENAME }}"
+             export EmailSettings__ConnectionString="${{ secrets.FCG_COMM_CONNECTION_STRING }}"
+             export RabbitMQ__UserName="${{ secrets.RABBITMQ_DEFAULT_USER }}"
+             export RabbitMQ__Password="${{ secrets.RABBITMQ_DEFAULT_PASS }}"
+             
+             envsubst < Kubernetes/worker/configmap.yaml | kubectl apply -n fcg-worker-dev -f -           # aplica o configmap com substituição de variáveis
+             envsubst < Kubernetes/worker/secret.yaml | kubectl apply -n fcg-worker-dev -f -              # aplica o secret com substituição de variáveis
+
+      - name: Deploy to AKS - DEV
+        run: |
+             export IMAGE_TAG="${{ needs.build-test-pushDockerImage.outputs.image_tag }}"                 # tag da imagem Docker
+             envsubst < Kubernetes/worker/deployment.yaml | kubectl apply -n fcg-worker-dev -f -          # aplica o deployment com substituição de variáveis
+             kubectl rollout status deployment/fcg-notification-worker -n fcg-worker-dev                  # aguarda o rollout completar
+
+  deploy-uat:
+    needs:
+      - build-test-pushDockerImage
+      - deploy-dev
+    runs-on: ubuntu-latest
+    environment: UAT
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set AKS context
+        run: az aks get-credentials --resource-group RG_FCG --name aks-fcg-notification --overwrite-existing
+        
+      - name: Apply Namespaces
+        run: kubectl apply -f Kubernetes/worker/namespace.yaml
+
+      - name: Apply ConfigMap and Secret
+        run: |
+             export ASPNETCORE_ENVIRONMENT="${{ vars.ENV }}"
+             export EmailSettings__SenderEmail="${{ vars.SENDER_EMAIL }}"
+             export RabbitMQ__HostName="${{ vars.RABBITMQ_HOSTNAME }}"
+             export RabbitMQ__QueueName="${{ vars.RABBITMQ_QUEUENAME }}"
+             export EmailSettings__ConnectionString="${{ secrets.FCG_COMM_CONNECTION_STRING }}"
+             export RabbitMQ__UserName="${{ secrets.RABBITMQ_DEFAULT_USER }}"
+             export RabbitMQ__Password="${{ secrets.RABBITMQ_DEFAULT_PASS }}"
+             
+             envsubst < Kubernetes/worker/configmap.yaml | kubectl apply -n fcg-worker-uat -f -           # aplica o configmap com substituição de variáveis
+             envsubst < Kubernetes/worker/secret.yaml | kubectl apply -n fcg-worker-uat -f -              # aplica o secret com substituição de variáveis
+
+      - name: Deploy to AKS - UAT
+        run: |
+             export IMAGE_TAG="${{ needs.build-test-pushDockerImage.outputs.image_tag }}"                 # tag da imagem Docker
+             envsubst < Kubernetes/worker/deployment.yaml | kubectl apply -n fcg-worker-uat -f -          # aplica o deployment com substituição de variáveis
+             kubectl rollout status deployment/fcg-notification-worker -n fcg-worker-uat                  # aguarda o rollout completar
+
+  deploy-prd:
+    needs:
+      - build-test-pushDockerImage
+      - deploy-dev
+      - deploy-uat
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: PRD
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set AKS context
+        run: az aks get-credentials --resource-group RG_FCG --name aks-fcg-notification --overwrite-existing
+        
+      - name: Apply Namespaces
+        run: kubectl apply -f Kubernetes/worker/namespace.yaml
+
+      - name: Apply ConfigMap and Secret
+        run: |
+             export ASPNETCORE_ENVIRONMENT="${{ vars.ENV }}"
+             export EmailSettings__SenderEmail="${{ vars.SENDER_EMAIL }}"
+             export RabbitMQ__HostName="${{ vars.RABBITMQ_HOSTNAME }}"
+             export RabbitMQ__QueueName="${{ vars.RABBITMQ_QUEUENAME }}"
+             export EmailSettings__ConnectionString="${{ secrets.FCG_COMM_CONNECTION_STRING }}"
+             export RabbitMQ__UserName="${{ secrets.RABBITMQ_DEFAULT_USER }}"
+             export RabbitMQ__Password="${{ secrets.RABBITMQ_DEFAULT_PASS }}"
+             
+             envsubst < Kubernetes/worker/configmap.yaml | kubectl apply -n fcg-worker -f -           # aplica o configmap com substituição de variáveis
+             envsubst < Kubernetes/worker/secret.yaml | kubectl apply -n fcg-worker -f -              # aplica o secret com substituição de variáveis
+
+      - name: Deploy to AKS - PRD
+        run: |
+             export IMAGE_TAG="${{ needs.build-test-pushDockerImage.outputs.image_tag }}"                 # tag da imagem Docker
+             envsubst < Kubernetes/worker/deployment.yaml | kubectl apply -n fcg-worker -f -          # aplica o deployment com substituição de variáveis
+             kubectl rollout status deployment/fcg-notification-worker -n fcg-worker                  # aguarda o rollout completar

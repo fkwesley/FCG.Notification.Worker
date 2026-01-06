@@ -1,0 +1,42 @@
+name: CI/CD - FCG.Notification.RabbitMQ - AKS
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Kubernetes/rabbitmq/**'
+      - '.github/workflows/ci-cd-aks-rabbitmq.yml'
+
+jobs:
+  deploy-prd:
+    runs-on: ubuntu-latest
+    environment: PRD
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set AKS context
+        run: az aks get-credentials --resource-group RG_FCG --name aks-fcg-notification --overwrite-existing
+        
+      - name: Apply Namespaces
+        run: kubectl apply -f Kubernetes/rabbitmq/namespace.yaml
+
+      - name: Apply Secret
+        run: |
+             export RABBITMQ_DEFAULT_USER="${{ secrets.RABBITMQ_DEFAULT_USER }}"
+             export RABBITMQ_DEFAULT_PASS="${{ secrets.RABBITMQ_DEFAULT_PASS }}"
+             export ENV="${{ vars.ENV }}"
+             envsubst < Kubernetes/rabbitmq/secret.yaml | kubectl apply -n fcg-rabbitmq -f -              # aplica o secret com substituição de variáveis
+
+      - name: Deploy to AKS - PRD
+        run: |
+             kubectl apply -f Kubernetes/rabbitmq/service.yaml -n fcg-rabbitmq                            # aplica o service
+             envsubst < Kubernetes/rabbitmq/statefulset.yaml | kubectl apply -n fcg-rabbitmq -f -         # aplica o statefulset com substituição de variáveis
+             kubectl rollout status statefulset/fcg-rabbitmq -n fcg-rabbitmq                              # aguarda o rollout completar
