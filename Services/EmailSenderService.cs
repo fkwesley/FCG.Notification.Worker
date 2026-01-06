@@ -28,8 +28,8 @@ namespace FCG.Notification.Worker.Services
             var template = EmailTemplate.GetTemplateById(message.TemplateId);
 
             // Replace placeholders in the template
-            var subject = template.Subject.Replace("{orderId}", message.OrderId);
-            var body = template.Body.Replace("{orderId}", message.OrderId);
+            var subject = template.Subject.Replace("{orderId}", message.OrderId.ToString());
+            var body = template.Body.Replace("{orderId}", message.OrderId.ToString());
 
             var emailContent = new EmailContent(subject)
             {

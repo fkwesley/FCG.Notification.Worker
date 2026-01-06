@@ -93,7 +93,7 @@ namespace FCG.Notification.Worker.Services
 
     public class EmailRequest
     {
-        public string OrderId { get; set; }
+        public int OrderId { get; set; }
         public string TemplateId { get; set; }
         public string Email { get; set; } = string.Empty;
     }
