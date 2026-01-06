@@ -6,4 +6,5 @@ data:
   EmailSettings__SenderEmail: "${EmailSettings__SenderEmail}"
   RabbitMQ__HostName: "${RabbitMQ__HostName}"
   RabbitMQ__QueueName: "${RabbitMQ__QueueName}"
-  ASPNETCORE_ENVIRONMENT: "${AspNetCore_Environment}"
+  ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT}"
+  DOTNET_ENVIRONMENT: "${DOTNET_ENVIRONMENT}"
