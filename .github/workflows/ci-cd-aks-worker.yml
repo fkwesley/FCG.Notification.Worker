@@ -70,7 +70,7 @@ jobs:
 
       - name: Apply ConfigMap and Secret
         run: |
-             export AspNetCore_Environment="${{ vars.ENV }}"
+             export ASPNETCORE_ENVIRONMENT="${{ vars.ENV }}"
              export EmailSettings__SenderEmail="${{ vars.SENDER_EMAIL }}"
              export RabbitMQ__HostName="${{ vars.RABBITMQ_HOSTNAME }}"
              export RabbitMQ__QueueName="${{ vars.RABBITMQ_QUEUENAME }}"
