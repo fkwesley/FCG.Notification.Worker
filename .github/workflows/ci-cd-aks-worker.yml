@@ -167,6 +167,6 @@ jobs:
 
       - name: Deploy to AKS - PRD
         run: |
-             export IMAGE_TAG="${{ needs.build-test-pushDockerImage.outputs.image_tag }}"                 # tag da imagem Docker
+             export IMAGE_TAG="${{ needs.build-test-pushDockerImage.outputs.image_tag }}"             # tag da imagem Docker
              envsubst < Kubernetes/worker/deployment.yaml | kubectl apply -n fcg-worker -f -          # aplica o deployment com substituição de variáveis
              kubectl rollout status deployment/fcg-notification-worker -n fcg-worker                  # aguarda o rollout completar
