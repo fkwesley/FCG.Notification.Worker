@@ -16,15 +16,18 @@ namespace FCG.Notification.Worker.Services
     {
         private readonly IEmailSenderService _emailSenderService;
         private readonly RabbitMQSettings _settings;
+        private readonly ILogger<RabbitMQConsumerService> _logger;
         private IConnection? _connection;
         private IChannel? _channel;
 
         public RabbitMQConsumerService(
             IEmailSenderService emailSenderService,
-            IOptions<RabbitMQSettings> options)
+            IOptions<RabbitMQSettings> options,
+            ILogger<RabbitMQConsumerService> logger)
         {
             _emailSenderService = emailSenderService;
             _settings = options.Value;
+            _logger = logger;
         }
 
         public async Task StartConsumingAsync(CancellationToken cancellationToken)
@@ -39,12 +42,26 @@ namespace FCG.Notification.Worker.Services
             _connection = await factory.CreateConnectionAsync(cancellationToken);
             _channel = await _connection.CreateChannelAsync(null, cancellationToken);
 
+            cancellationToken.Register(() =>
+            {
+                _logger.LogInformation("Shutting down RabbitMQ connection...");
+                _channel?.CloseAsync();
+                _connection?.CloseAsync();
+            });
+
+            await _channel.BasicQosAsync(0, 1, false);
+
             await _channel.QueueDeclareAsync(
                 queue: _settings.QueueName,
                 durable: true,
                 exclusive: false,
                 autoDelete: false,
                 arguments: null);
+
+            _logger.LogInformation(
+                "Connected to RabbitMQ at {Host}, queue {Queue}",
+                _settings.HostName,
+                _settings.QueueName);
 
             var consumer = new AsyncEventingBasicConsumer(_channel);
 
@@ -56,17 +73,13 @@ namespace FCG.Notification.Worker.Services
                     var emailMessage = JsonSerializer.Deserialize<EmailRequest>(message);
 
                     if (emailMessage is not null)
-                    {
                         await _emailSenderService.SendEmailAsync(emailMessage);
-                    }
 
                     await _channel.BasicAckAsync(ea.DeliveryTag, false);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error processing message: {ex}");
-
-                    // Requeue controlado (pode virar DLQ depois)
+                    _logger.LogError(ex, "Error processing message");
                     await _channel.BasicNackAsync(ea.DeliveryTag, false, true);
                 }
             };
@@ -76,19 +89,10 @@ namespace FCG.Notification.Worker.Services
                 autoAck: false,
                 consumer: consumer);
 
-            // Mantém o consumer vivo
             await Task.Delay(Timeout.Infinite, cancellationToken);
         }
-
-        public async Task StopAsync()
-        {
-            if (_channel is not null)
-                await _channel.CloseAsync();
-
-            if (_connection is not null)
-                await _connection.CloseAsync();
-        }
     }
+
 
 
     public class EmailRequest
