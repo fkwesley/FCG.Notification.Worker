@@ -85,7 +85,6 @@ jobs:
         run: |
              export IMAGE_TAG="${{ needs.build-test-pushDockerImage.outputs.image_tag }}"                 # tag da imagem Docker
              envsubst < Kubernetes/worker/deployment.yaml | kubectl apply -n fcg-worker-dev -f -          # aplica o deployment com substituição de variáveis
-             kubectl apply -f Kubernetes/worker/service.yaml -n fcg-worker-dev                            # aplica o service
              kubectl rollout status deployment/fcg-notification-worker -n fcg-worker-dev                  # aguarda o rollout completar
 
   deploy-uat:
@@ -127,7 +126,6 @@ jobs:
         run: |
              export IMAGE_TAG="${{ needs.build-test-pushDockerImage.outputs.image_tag }}"                 # tag da imagem Docker
              envsubst < Kubernetes/worker/deployment.yaml | kubectl apply -n fcg-worker-uat -f -          # aplica o deployment com substituição de variáveis
-             kubectl apply -f Kubernetes/worker/service.yaml -n fcg-worker-uat                            # aplica o service
              kubectl rollout status deployment/fcg-notification-worker -n fcg-worker-uat                  # aguarda o rollout completar
 
   deploy-prd:
@@ -171,5 +169,4 @@ jobs:
         run: |
              export IMAGE_TAG="${{ needs.build-test-pushDockerImage.outputs.image_tag }}"                 # tag da imagem Docker
              envsubst < Kubernetes/worker/deployment.yaml | kubectl apply -n fcg-worker -f -          # aplica o deployment com substituição de variáveis
-             kubectl apply -f Kubernetes/worker/service.yaml -n fcg-worker                            # aplica o service
              kubectl rollout status deployment/fcg-notification-worker -n fcg-worker                  # aguarda o rollout completar
