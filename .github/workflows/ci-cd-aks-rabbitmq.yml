@@ -30,8 +30,8 @@ jobs:
 
       - name: Apply Secret
         run: |
-             export RABBITMQ_USER="${{ secrets.RABBITMQ_USER }}"
-             export RABBITMQ_PASSWORD="${{ secrets.RABBITMQ_PASSWORD }}"
+             export RABBITMQ_DEFAULT_USER="${{ secrets.RABBITMQ_DEFAULT_USER }}"
+             export RABBITMQ_DEFAULT_PASS="${{ secrets.RABBITMQ_DEFAULT_PASS }}"
              export ENV="${{ vars.ENV }}"
              envsubst < Kubernetes/rabbitmq/secret.yaml | kubectl apply -n fcg-rabbitmq-dev -f -              # aplica o secret com substituição de variáveis
 
