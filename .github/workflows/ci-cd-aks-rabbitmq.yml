@@ -1,4 +1,4 @@
-name: CI/CD - FCG.RabbitMQ - AKS
+name: CI/CD - FCG.Notification.RabbitMQ - AKS
 
 on:
   push:
@@ -9,9 +9,9 @@ on:
       - 'Documentation/**'
 
 jobs:
-  deploy-dev:
+  deploy-prd:
     runs-on: ubuntu-latest
-    environment: DEV
+    environment: PRD
 
     steps:
       - name: Checkout Code
@@ -33,10 +33,10 @@ jobs:
              export RABBITMQ_DEFAULT_USER="${{ secrets.RABBITMQ_DEFAULT_USER }}"
              export RABBITMQ_DEFAULT_PASS="${{ secrets.RABBITMQ_DEFAULT_PASS }}"
              export ENV="${{ vars.ENV }}"
-             envsubst < Kubernetes/rabbitmq/secret.yaml | kubectl apply -n fcg-rabbitmq-dev -f -              # aplica o secret com substituição de variáveis
+             envsubst < Kubernetes/rabbitmq/secret.yaml | kubectl apply -n fcg-rabbitmq -f -              # aplica o secret com substituição de variáveis
 
-      - name: Deploy to AKS - DEV
+      - name: Deploy to AKS - PRD
         run: |
-             kubectl apply -f Kubernetes/rabbitmq/service.yaml -n fcg-rabbitmq-dev                            # aplica o service
-             envsubst < Kubernetes/rabbitmq/statefulset.yaml | kubectl apply -n fcg-rabbitmq-dev -f -         # aplica o statefulset com substituição de variáveis
-             kubectl rollout status statefulset/fcg-rabbitmq -n fcg-rabbitmq-dev                              # aguarda o rollout completar
+             kubectl apply -f Kubernetes/rabbitmq/service.yaml -n fcg-rabbitmq                            # aplica o service
+             envsubst < Kubernetes/rabbitmq/statefulset.yaml | kubectl apply -n fcg-rabbitmq -f -         # aplica o statefulset com substituição de variáveis
+             kubectl rollout status statefulset/fcg-rabbitmq -n fcg-rabbitmq                              # aguarda o rollout completar
