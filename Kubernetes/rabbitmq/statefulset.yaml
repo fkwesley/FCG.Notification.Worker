@@ -36,17 +36,17 @@ spec:
               containerPort: 15672              # Porta da interface web de administração do RabbitMQ
 
           env:
-            - name: RABBITMQ_USER       # Variável de ambiente usada pelo RabbitMQ
+            - name: RABBITMQ_DEFAULT_USER       # Variável de ambiente usada pelo RabbitMQ
               valueFrom:
                 secretKeyRef:
                   name: fcg-rabbitmq-secret
-                  key: RABBITMQ_USER
+                  key: RABBITMQ_DEFAULT_USER
 
-            - name: RABBITMQ_PASSWORD
+            - name: RABBITMQ_DEFAULT_PASS
               valueFrom:
                 secretKeyRef:
                   name: fcg-rabbitmq-secret
-                  key: RABBITMQ_PASSWORD
+                  key: RABBITMQ_DEFAULT_PASS
 
           volumeMounts:
             - name: rabbitmq-data
