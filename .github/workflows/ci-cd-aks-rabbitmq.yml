@@ -3,7 +3,7 @@ name: CI/CD - FCG.Notification.RabbitMQ - AKS
 on:
   push:
     branches:
-      - main
+      - '**'
     paths:
       - 'Kubernetes/rabbitmq/**'
       - '.github/workflows/ci-cd-aks-rabbitmq.yml'
