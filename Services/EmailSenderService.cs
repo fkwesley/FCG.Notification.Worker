@@ -30,8 +30,8 @@ namespace FCG.Notification.Worker.Services
             // Replace placeholders in the template dinamically
             foreach (var param in message.Parameters)
             {
-                template.Subject.Replace(param.Key, param.Value);
-                template.Body.Replace(param.Key, param.Value);
+                template.Subject = template.Subject.Replace(param.Key, param.Value);
+                template.Body = template.Body.Replace(param.Key, param.Value);
             }
 
             var emailContent = new EmailContent(template.Subject)
