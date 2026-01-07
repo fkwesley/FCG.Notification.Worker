@@ -27,13 +27,16 @@ namespace FCG.Notification.Worker.Services
         {
             var template = EmailTemplate.GetTemplateById(message.TemplateId);
 
-            // Replace placeholders in the template
-            var subject = template.Subject.Replace("{orderId}", message.OrderId.ToString());
-            var body = template.Body.Replace("{orderId}", message.OrderId.ToString());
-
-            var emailContent = new EmailContent(subject)
+            // Replace placeholders in the template dinamically
+            foreach (var param in message.Parameters)
             {
-                PlainText = body
+                template.Subject.Replace(param.Key, param.Value);
+                template.Body.Replace(param.Key, param.Value);
+            }
+
+            var emailContent = new EmailContent(template.Subject)
+            {
+                PlainText = template.Body
             };
 
             var emailMessage = new EmailMessage(_settings.SenderEmail, message.Email, emailContent);
@@ -41,7 +44,7 @@ namespace FCG.Notification.Worker.Services
             try
             {
                 var response = await _emailClient.SendAsync(Azure.WaitUntil.Completed, emailMessage);
-                Console.WriteLine($"Email sent successfully for OrderId: {message.OrderId}. MessageId: {response.Id}");
+                Console.WriteLine($"{DateTime.Now} - Email sent successfully for RequestID: {message.RequestId}. MessageId: {response.Id}");
             }
             catch (Exception ex)
             {
