@@ -97,8 +97,9 @@ namespace FCG.Notification.Worker.Services
 
     public class EmailRequest
     {
-        public int OrderId { get; set; }
+        public int RequestId { get; set; }
         public string TemplateId { get; set; }
         public string Email { get; set; } = string.Empty;
+        public Dictionary<string, string> Parameters { get; set; } = new Dictionary<string, string>();
     }
 }

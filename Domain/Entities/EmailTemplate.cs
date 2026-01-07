@@ -26,7 +26,13 @@ namespace FCG.Notification.Worker.Domain.Entities
                 {
                     Id = "PaymentReceived",
                     Subject = "FiapCloudGames - Payment Received",
-                    Body = "Your payment for {orderId} has been received."
+                    Body = "Your payment for order {orderId} has been received."
+                },
+                "StatusChanged" => new EmailTemplate
+                {
+                    Id = "OrderStatusChanged",
+                    Subject = "FiapCloudGames - Your Order has been updated",
+                    Body = "Your order {orderId} has been updated to status {newStatus}."
                 },
                 _ => throw new ArgumentException("Invalid template ID")
             };
