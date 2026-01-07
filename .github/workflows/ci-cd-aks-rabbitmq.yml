@@ -23,7 +23,7 @@ jobs:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Set AKS context
-        run: az aks get-credentials --resource-group RG_FCG --name aks-fcg-notification --overwrite-existing
+        run: az aks get-credentials --resource-group RG_FCG --name aks-fcg-notifications --overwrite-existing
         
       - name: Apply Namespaces
         run: kubectl apply -f Kubernetes/rabbitmq/namespace.yaml
