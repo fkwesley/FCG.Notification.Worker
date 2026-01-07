@@ -28,7 +28,7 @@ namespace FCG.Notification.Worker.Domain.Entities
                     Subject = "FiapCloudGames - Payment Received",
                     Body = "Your payment for order {orderId} has been received."
                 },
-                "StatusChanged" => new EmailTemplate
+                "OrderStatusChanged" => new EmailTemplate
                 {
                     Id = "OrderStatusChanged",
                     Subject = "FiapCloudGames - Your Order has been updated",
