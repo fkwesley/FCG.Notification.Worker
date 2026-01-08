@@ -18,7 +18,15 @@ RUN dotnet publish FCG.Notification.Worker.csproj \
 # ============================
 # Runtime stage
 # ============================
-FROM mcr.microsoft.com/dotnet/runtime:8.0 AS runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine
+
+# Install support to globalization
+RUN apk add --no-cache icu-libs tzdata
+
+# Set .NET to use ICU
+ENV DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false
+ENV TZ=America/Sao_Paulo
+
 WORKDIR /app
 
 ENV DOTNET_ENVIRONMENT=Production
