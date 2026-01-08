@@ -43,6 +43,9 @@ namespace FCG.Notification.Worker.Services
 
             try
             {
+                //logging message details
+                Console.WriteLine($"{DateTime.Now} - Sending email from: {_settings.SenderEmail} ");
+                Console.WriteLine($"{DateTime.Now} - Sending email for RequestID: {message.RequestId} to {message.Email} using TemplateID: {message.TemplateId}");
                 var response = await _emailClient.SendAsync(Azure.WaitUntil.Completed, emailMessage);
                 Console.WriteLine($"{DateTime.Now} - Email sent successfully for RequestID: {message.RequestId}. MessageId: {response.Id}");
             }
