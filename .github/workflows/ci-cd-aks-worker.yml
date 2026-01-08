@@ -70,14 +70,17 @@ jobs:
 
       - name: Apply ConfigMap and Secret
         run: |
-             export ASPNETCORE_ENVIRONMENT="${{ vars.ENV }}"
-             export DOTNET_ENVIRONMENT="${{ vars.ENV }}"
+             export EmailSettings__ConnectionString="${{ secrets.FCG_COMM_CONNECTION_STRING }}"
              export EmailSettings__SenderEmail="${{ vars.SENDER_EMAIL }}"
              export RabbitMQ__HostName="${{ vars.RABBITMQ_HOSTNAME }}"
              export RabbitMQ__QueueName="${{ vars.RABBITMQ_QUEUENAME }}"
-             export EmailSettings__ConnectionString="${{ secrets.FCG_COMM_CONNECTION_STRING }}"
              export RabbitMQ__UserName="${{ secrets.RABBITMQ_DEFAULT_USER }}"
              export RabbitMQ__Password="${{ secrets.RABBITMQ_DEFAULT_PASS }}"
+             export APM_SERVICE_NAME="${{ vars.APM_SERVICE_NAME }}"
+             export ELASTIC_APM_ENABLED="${{ vars.ELASTIC_APM_ENABLED }}"
+             export ELASTIC_APM_SERVER_URL="${{ vars.ELASTIC_APM_SERVER_URL }}"
+             export ELASTIC_APM_SECRET_TOKEN="${{ secrets.ELASTIC_APM_SECRET_TOKEN }}"
+             export ENV="${{ vars.ENV }}"
              
              envsubst < Kubernetes/worker/configmap.yaml | kubectl apply -n fcg-worker-dev -f -           # aplica o configmap com substituição de variáveis
              envsubst < Kubernetes/worker/secret.yaml | kubectl apply -n fcg-worker-dev -f -              # aplica o secret com substituição de variáveis
@@ -112,14 +115,17 @@ jobs:
 
       - name: Apply ConfigMap and Secret
         run: |
-             export ASPNETCORE_ENVIRONMENT="${{ vars.ENV }}"
-             export DOTNET_ENVIRONMENT="${{ vars.ENV }}"
+             export EmailSettings__ConnectionString="${{ secrets.FCG_COMM_CONNECTION_STRING }}"
              export EmailSettings__SenderEmail="${{ vars.SENDER_EMAIL }}"
              export RabbitMQ__HostName="${{ vars.RABBITMQ_HOSTNAME }}"
              export RabbitMQ__QueueName="${{ vars.RABBITMQ_QUEUENAME }}"
-             export EmailSettings__ConnectionString="${{ secrets.FCG_COMM_CONNECTION_STRING }}"
              export RabbitMQ__UserName="${{ secrets.RABBITMQ_DEFAULT_USER }}"
              export RabbitMQ__Password="${{ secrets.RABBITMQ_DEFAULT_PASS }}"
+             export APM_SERVICE_NAME="${{ vars.APM_SERVICE_NAME }}"
+             export ELASTIC_APM_ENABLED="${{ vars.ELASTIC_APM_ENABLED }}"
+             export ELASTIC_APM_SERVER_URL="${{ vars.ELASTIC_APM_SERVER_URL }}"
+             export ELASTIC_APM_SECRET_TOKEN="${{ secrets.ELASTIC_APM_SECRET_TOKEN }}"
+             export ENV="${{ vars.ENV }}"
              
              envsubst < Kubernetes/worker/configmap.yaml | kubectl apply -n fcg-worker-uat -f -           # aplica o configmap com substituição de variáveis
              envsubst < Kubernetes/worker/secret.yaml | kubectl apply -n fcg-worker-uat -f -              # aplica o secret com substituição de variáveis
@@ -156,14 +162,17 @@ jobs:
 
       - name: Apply ConfigMap and Secret
         run: |
-             export ASPNETCORE_ENVIRONMENT="${{ vars.ENV }}"
-             export DOTNET_ENVIRONMENT="${{ vars.ENV }}"
+             export EmailSettings__ConnectionString="${{ secrets.FCG_COMM_CONNECTION_STRING }}"
              export EmailSettings__SenderEmail="${{ vars.SENDER_EMAIL }}"
              export RabbitMQ__HostName="${{ vars.RABBITMQ_HOSTNAME }}"
              export RabbitMQ__QueueName="${{ vars.RABBITMQ_QUEUENAME }}"
-             export EmailSettings__ConnectionString="${{ secrets.FCG_COMM_CONNECTION_STRING }}"
              export RabbitMQ__UserName="${{ secrets.RABBITMQ_DEFAULT_USER }}"
              export RabbitMQ__Password="${{ secrets.RABBITMQ_DEFAULT_PASS }}"
+             export APM_SERVICE_NAME="${{ vars.APM_SERVICE_NAME }}"
+             export ELASTIC_APM_ENABLED="${{ vars.ELASTIC_APM_ENABLED }}"
+             export ELASTIC_APM_SERVER_URL="${{ vars.ELASTIC_APM_SERVER_URL }}"
+             export ELASTIC_APM_SECRET_TOKEN="${{ secrets.ELASTIC_APM_SECRET_TOKEN }}"
+             export ENV="${{ vars.ENV }}"
              
              envsubst < Kubernetes/worker/configmap.yaml | kubectl apply -n fcg-worker -f -           # aplica o configmap com substituição de variáveis
              envsubst < Kubernetes/worker/secret.yaml | kubectl apply -n fcg-worker -f -              # aplica o secret com substituição de variáveis
