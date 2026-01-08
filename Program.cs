@@ -37,6 +37,9 @@ builder.Services.AddSingleton<IEmailSenderService, EmailSenderService>();
 
 builder.Services.AddHostedService<Worker>();
 
+if (builder.Configuration["ElasticApm:Enabled"].ToLower() == "true")
+    builder.Services.AddAllElasticApm();
+
 var host = builder.Build();
 
 await host.RunAsync();
