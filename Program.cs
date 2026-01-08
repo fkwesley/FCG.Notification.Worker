@@ -3,6 +3,8 @@ using FCG.Notification.Worker.Services;
 using FCG.Notification.Worker.Infrastructure.Configurations;
 using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
+using Elastic.Apm;
+using Elastic.Apm.Extensions.Logging;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -38,7 +40,7 @@ builder.Services.AddSingleton<IEmailSenderService, EmailSenderService>();
 builder.Services.AddHostedService<Worker>();
 
 if (builder.Configuration["ElasticApm:Enabled"].ToLower() == "true")
-    builder.Services.AddAllElasticApm();
+    builder.Services.AddElasticApm();
 
 var host = builder.Build();
 
