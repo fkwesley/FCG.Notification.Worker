@@ -1,5 +1,6 @@
 using System.Text;
 using System.Text.Json;
+using Elastic.Apm;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -17,6 +18,7 @@ namespace FCG.Notification.Worker.Services
         private readonly IEmailSenderService _emailSenderService;
         private readonly RabbitMQSettings _settings;
         private readonly ILogger<RabbitMQConsumerService> _logger;
+
         private IConnection? _connection;
         private IChannel? _channel;
 
@@ -67,21 +69,56 @@ namespace FCG.Notification.Worker.Services
 
             consumer.ReceivedAsync += async (_, ea) =>
             {
-                try
-                {
-                    var message = Encoding.UTF8.GetString(ea.Body.ToArray());
-                    var emailMessage = JsonSerializer.Deserialize<EmailRequest>(message);
+                // 1 MESSAGE = 1 TRANSACTION
+                await Agent.Tracer.CaptureTransaction(
+                    "Consume Email Notification",
+                    "messaging",
+                    async transaction =>
+                    {
+                        try
+                        {
+                            transaction.SetLabel("queue", _settings.QueueName);
+                            string message;
 
-                    if (emailMessage is not null)
-                        await _emailSenderService.SendEmailAsync(emailMessage);
+                            // Span: Deserialize
+                            message = Encoding.UTF8.GetString(ea.Body.ToArray());
 
-                    await _channel.BasicAckAsync(ea.DeliveryTag, false);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error processing message");
-                    await _channel.BasicNackAsync(ea.DeliveryTag, false, true);
-                }
+                            EmailRequest? emailMessage = null;
+
+                            transaction.CaptureSpan("DeserializeMessage", "serialization", () =>
+                            {
+                                emailMessage = JsonSerializer.Deserialize<EmailRequest>(message);
+                            });
+
+                            if (emailMessage is not null)
+                            {
+                                transaction.SetLabel("templateId", emailMessage.TemplateId);
+                                transaction.SetLabel("requestId", emailMessage.RequestId);
+
+                                // Span: Business logic
+                                await transaction.CaptureSpan(
+                                    "SendEmail",
+                                    "external",
+                                    async () =>
+                                    {
+                                        await _emailSenderService.SendEmailAsync(emailMessage);
+                                    });
+                            }
+
+                            await _channel.BasicAckAsync(ea.DeliveryTag, false);
+                        }
+                        catch (Exception ex)
+                        {
+                            transaction.CaptureException(ex);
+
+                            _logger.LogError(ex, "Error processing RabbitMQ message");
+
+                            await _channel.BasicNackAsync(
+                                ea.DeliveryTag,
+                                multiple: false,
+                                requeue: true);
+                        }
+                    });
             };
 
             await _channel.BasicConsumeAsync(
@@ -89,17 +126,16 @@ namespace FCG.Notification.Worker.Services
                 autoAck: false,
                 consumer: consumer);
 
+            // Mantém o consumer vivo
             await Task.Delay(Timeout.Infinite, cancellationToken);
         }
     }
 
-
-
     public class EmailRequest
     {
         public int RequestId { get; set; }
-        public string TemplateId { get; set; }
+        public string TemplateId { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
-        public Dictionary<string, string> Parameters { get; set; } = new Dictionary<string, string>();
+        public Dictionary<string, string> Parameters { get; set; } = new();
     }
 }
