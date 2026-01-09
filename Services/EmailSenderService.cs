@@ -48,7 +48,7 @@ namespace FCG.Notification.Worker.Services
                 Console.WriteLine($"{DateTime.Now} - Sending email for OrderId: {message.RequestId} to {message.Email} using TemplateID: {message.TemplateId}");
                 Console.WriteLine($"{DateTime.Now} - Parameters: {string.Join(" | ", message.Parameters.Select(p => $"{p.Key}={p.Value}"))}");
 
-                await _emailClient.SendAsync(Azure.WaitUntil.Started, emailMessage);
+                _emailClient.SendAsync(Azure.WaitUntil.Started, emailMessage);
 
                 Console.WriteLine($"{DateTime.Now} - Email Request {message.RequestId} sent to Azure Communication Services.");
                 Console.WriteLine($"----");
