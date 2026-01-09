@@ -46,13 +46,11 @@ namespace FCG.Notification.Worker.Services
                 //logging message details
                 Console.WriteLine($"{DateTime.Now} - Sending email from: {_settings.SenderEmail} ");
                 Console.WriteLine($"{DateTime.Now} - Sending email for RequestID: {message.RequestId} to {message.Email} using TemplateID: {message.TemplateId}");
-                var response = await _emailClient.SendAsync(Azure.WaitUntil.Started, emailMessage);
 
-                if (response.HasValue)
-                    Console.WriteLine($"{DateTime.Now} - Email sent successfully for RequestID: {message.RequestId}. MessageId: {response.Id} >> response.Value: {response.Value}");
-                else
-                    Console.WriteLine($"Response Not Complete - {response.Value.ToString()}");
-            }
+                _emailClient.SendAsync(Azure.WaitUntil.Started, emailMessage);
+
+                Console.WriteLine($"{DateTime.Now} - Email Request {message.RequestId} sent to Azure Communication Services.");
+            }            
             catch (Exception ex)
             {
                 Console.WriteLine($"{DateTime.Now} - Failed to send email:");
@@ -60,6 +58,7 @@ namespace FCG.Notification.Worker.Services
                 Console.WriteLine($"{DateTime.Now} - ex.StackTrace: {ex.StackTrace}");
                 Console.WriteLine($"{DateTime.Now} - ex.InnerException: {ex.InnerException}");
                 Console.WriteLine($"{DateTime.Now} - ex.HResult: {ex.HResult}");
+                
                 throw; // Re-throw the exception to handle it in the caller
             }
         }
