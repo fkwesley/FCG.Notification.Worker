@@ -45,19 +45,18 @@ namespace FCG.Notification.Worker.Services
             {
                 //logging message details
                 Console.WriteLine($"{DateTime.Now} - Sending email from: {_settings.SenderEmail} ");
-                Console.WriteLine($"{DateTime.Now} - Sending email for RequestID: {message.RequestId} to {message.Email} using TemplateID: {message.TemplateId}");
+                Console.WriteLine($"{DateTime.Now} - Sending email for OrderId: {message.RequestId} to {message.Email} using TemplateID: {message.TemplateId}");
+                Console.WriteLine($"{DateTime.Now} - Parameters: {string.Join(" | ", message.Parameters.Select(p => $"{p.Key}={p.Value}"))}");
 
-                _emailClient.SendAsync(Azure.WaitUntil.Started, emailMessage);
+                await _emailClient.SendAsync(Azure.WaitUntil.Started, emailMessage);
 
                 Console.WriteLine($"{DateTime.Now} - Email Request {message.RequestId} sent to Azure Communication Services.");
+                Console.WriteLine($"----");
             }            
             catch (Exception ex)
             {
                 Console.WriteLine($"{DateTime.Now} - Failed to send email:");
-                Console.WriteLine($"{DateTime.Now} - ex.Message: {ex.Message}");
-                Console.WriteLine($"{DateTime.Now} - ex.StackTrace: {ex.StackTrace}");
-                Console.WriteLine($"{DateTime.Now} - ex.InnerException: {ex.InnerException}");
-                Console.WriteLine($"{DateTime.Now} - ex.HResult: {ex.HResult}");
+                Console.WriteLine($"ex.Message: {ex.Message}");
                 
                 throw; // Re-throw the exception to handle it in the caller
             }

@@ -17,7 +17,8 @@ namespace FCG.Notification.Worker.Services
     {
         private readonly IEmailSenderService _emailSenderService;
         private readonly RabbitMQSettings _settings;
-        private readonly ILogger<RabbitMQConsumerService> _logger;
+        private readonly ILogger<RabbitMQConsumerService> _logger; 
+        private static readonly SemaphoreSlim _emailLimiter = new(1);
 
         private IConnection? _connection;
         private IChannel? _channel;
@@ -95,6 +96,10 @@ namespace FCG.Notification.Worker.Services
                                 transaction.SetLabel("templateId", emailMessage.TemplateId);
                                 transaction.SetLabel("requestId", emailMessage.RequestId);
 
+                                await _emailLimiter.WaitAsync();
+                                _logger.LogInformation($"{DateTime.Now} - Delay de 5 segundos para iniciar o processamento");
+                                await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken);
+
                                 // Span: Business logic
                                 await transaction.CaptureSpan(
                                     "SendEmail",
@@ -117,6 +122,10 @@ namespace FCG.Notification.Worker.Services
                                 ea.DeliveryTag,
                                 multiple: false,
                                 requeue: true);
+                        }
+                        finally
+                        {
+                            _emailLimiter.Release();
                         }
                     });
             };

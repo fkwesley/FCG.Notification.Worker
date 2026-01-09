@@ -88,8 +88,8 @@ jobs:
       - name: Deploy to AKS - DEV
         run: |
              export IMAGE_TAG="${{ needs.build-test-pushDockerImage.outputs.image_tag }}"                 # tag da imagem Docker
-             envsubst < Kubernetes/worker/deployment.yaml | kubectl apply -n fcg-worker-dev -f -          # aplica o deployment com substituição de variáveis
-             kubectl rollout status deployment/fcg-notification-worker -n fcg-worker-dev                  # aguarda o rollout completar
+             # envsubst < Kubernetes/worker/deployment.yaml | kubectl apply -n fcg-worker-dev -f -          # aplica o deployment com substituição de variáveis
+             # kubectl rollout status deployment/fcg-notification-worker -n fcg-worker-dev                  # aguarda o rollout completar
 
   deploy-uat:
     needs:
@@ -133,8 +133,8 @@ jobs:
       - name: Deploy to AKS - UAT
         run: |
              export IMAGE_TAG="${{ needs.build-test-pushDockerImage.outputs.image_tag }}"                 # tag da imagem Docker
-             envsubst < Kubernetes/worker/deployment.yaml | kubectl apply -n fcg-worker-uat -f -          # aplica o deployment com substituição de variáveis
-             kubectl rollout status deployment/fcg-notification-worker -n fcg-worker-uat                  # aguarda o rollout completar
+             # envsubst < Kubernetes/worker/deployment.yaml | kubectl apply -n fcg-worker-uat -f -          # aplica o deployment com substituição de variáveis
+             # kubectl rollout status deployment/fcg-notification-worker -n fcg-worker-uat                  # aguarda o rollout completar
 
   deploy-prd:
     needs:
