@@ -1,4 +1,4 @@
-﻿# 🎮 FCG.Notification.Worker
+﻿# 🎮 FCG.Notifications.Worker
 
 WorkerService desenvolvido em .NET 8 para consumir mensagens de uma fila no RabbitMQ e processá-las redirecionando para o Azure Communication Services para envio de e-mails.
 - Hospedada na Azure usando AKS (Azure Kubernetes Services) e imagem publicada no ACR (Azure Container Registry).
@@ -59,7 +59,14 @@ Desenvolver um worker service robusto e escalável, aplicando:
     - Implementação de Deployments e Services para gerenciamento dos pods e exposição das aplicações
     - Implementação de Statefulset e PVC (Persistent Volume Claim) para serviços que necessitam de persistência de dados
   - **Comunicação Assíncrona entre serviços:**
-    - Utilização de fila RabbitMQ para enfilerar requisições e garantir resiliência 
+    - Utilização de filas e tópicos no RabbitMQ e ServiceBus para enfilerar requisições e garantir resiliência 
+  - **Otimização das imagens Docker**
+    - Migração versão da imagem Docker do .NET para uma versão mais leve, otimizando recursos dos containers
+    - Aplicações adaptadas para trabalhar com a versão mais leve
+    - Redução de aproximadamente 50% do tamanho das imagens
+  - **Monitoramento
+    - Elastic.APM instrumentado nas apis e no worker service
+    - dashboards com métricas de CPU, memória, requisições, pods...
   
 
 ## 🚀 Tecnologias Utilizadas
@@ -72,6 +79,7 @@ Desenvolver um worker service robusto e escalável, aplicando:
 | Monitoramento     | New Relic (.NET Agent) + Azure |
 | Mensageria        | RabbitMQ|
 | Consumer de Mensagens | Worker Services                 |
+| Comunicação | Azure Communication Services |
 | Orquestração      | Azure Kubernetes Services |
 | CI/CD             | GitHub Actions                   |
 
@@ -145,7 +153,7 @@ As variáveis de ambiente sensíveis (como strings de conexão) são gerenciadas
 Este projeto utiliza um Dockerfile em duas etapas para garantir uma imagem otimizada e segura:
 
 - **Stage 1 - Build**: Usa a imagem oficial do .NET SDK 8.0 para restaurar dependências, compilar e publicar a aplicação em modo Release.
-- **Stage 2 - Runtime**: Utiliza a imagem mais leve do ASP.NET 8.0 para executar a aplicação, copiando apenas os artefatos publicados da etapa de build, o que reduz o tamanho final da imagem.
+- **Stage 2 - Runtime**: Utiliza a versão alpine (imagem mais leve do ASP.NET 8.0) para executar a aplicação, copiando apenas os artefatos publicados da etapa de build, o que reduz o tamanho final da imagem.
 
 Além disso, o agente do **New Relic** é instalado na imagem de runtime para habilitar monitoramento detalhado da aplicação. As variáveis de ambiente necessárias para a configuração do agente são definidas no Dockerfile, podendo ser sobrescritas via ambiente de execução (ex.: Kubernetes, Azure Container Apps).
 
